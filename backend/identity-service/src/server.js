@@ -11,7 +11,7 @@ const { errorHandler } = require("./middleware/error.middleware");
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Security middleware
+// Middleware bảo mật
 app.use(helmet());
 app.use(
   cors({
@@ -20,10 +20,10 @@ app.use(
   })
 );
 
-// Rate limiting
+// Giới hạn tốc độ request
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000, // 15 phút
+  max: 100, // giới hạn mỗi IP 100 requests trong windowMs
   message: "Too many requests from this IP, please try again later.",
 });
 app.use("/api/", limiter);
@@ -45,7 +45,7 @@ app.get("/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
-// Debug logging middleware (only for development)
+// Debug logging middleware (chỉ cho development)
 if (process.env.NODE_ENV !== "production") {
   app.use((req, res, next) => {
     console.log(`${req.method} ${req.url} - ${new Date().toISOString()}`);
@@ -57,7 +57,7 @@ if (process.env.NODE_ENV !== "production") {
 app.use((req, res) => {
   console.log(`404 - Route not found: ${req.method} ${req.url}`);
 
-  // Provide helpful message for common mistakes
+  // Cung cấp thông báo hữu ích cho các lỗi thường gặp
   let hint = "";
   if (req.url === "/api/auth/refresh" && req.method === "GET") {
     hint = "Hint: /api/auth/refresh requires POST method, not GET";
@@ -85,19 +85,19 @@ app.use((req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
-// Start server
+// Khởi động server
 async function startServer() {
   try {
-    // Connect to database
+    // Kết nối database
     await db.connect();
 
-    // Start listening
+    // Bắt đầu lắng nghe
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Identity Service running on port ${PORT}`);
       console.log(`📊 Health check: http://localhost:${PORT}/health`);
     });
 
-    // Graceful shutdown
+    // Tắt server một cách graceful
     process.on("SIGTERM", async () => {
       console.log("SIGTERM received, shutting down gracefully");
       await db.disconnect();

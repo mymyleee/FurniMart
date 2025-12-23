@@ -3,7 +3,7 @@ const UserModel = require("../models/user.model");
 
 class UserController {
   /**
-   * Get user by ID (Admin only)
+   * Lấy user theo ID (chỉ Admin)
    */
   static async getUserById(req, res, next) {
     try {
@@ -27,7 +27,7 @@ class UserController {
   }
 
   /**
-   * Update user profile
+   * Cập nhật profile user
    */
   static async updateProfile(req, res, next) {
     try {
@@ -44,7 +44,7 @@ class UserController {
       const userId = req.user.id;
 
       // TODO: Implement profile update logic
-      // For now, just return success
+      // Hiện tại chỉ trả về success
 
       res.json({
         success: true,
@@ -57,7 +57,7 @@ class UserController {
   }
 
   /**
-   * Change password
+   * Đổi mật khẩu
    */
   static async changePassword(req, res, next) {
     try {
@@ -73,7 +73,7 @@ class UserController {
       const { currentPassword, newPassword } = req.body;
       const userId = req.user.id;
 
-      // Get user to verify current password
+      // Lấy user để xác thực mật khẩu hiện tại
       const user = await UserModel.findByEmail(req.user.email);
       if (!user) {
         return res.status(404).json({
@@ -82,7 +82,7 @@ class UserController {
         });
       }
 
-      // Verify current password
+      // Xác thực mật khẩu hiện tại
       const { comparePassword } = require("../utils/password.utils");
       const isPasswordValid = await comparePassword(
         currentPassword,
@@ -95,7 +95,7 @@ class UserController {
         });
       }
 
-      // Update password
+      // Cập nhật mật khẩu
       await UserModel.updatePassword(userId, newPassword);
 
       res.json({
@@ -108,7 +108,7 @@ class UserController {
   }
 
   /**
-   * Update user status (Admin only)
+   * Cập nhật trạng thái user (chỉ Admin)
    */
   static async updateUserStatus(req, res, next) {
     try {
@@ -124,7 +124,7 @@ class UserController {
       const { id } = req.params;
       const { status, reason } = req.body;
 
-      // Check if user exists
+      // Kiểm tra user có tồn tại không
       const user = await UserModel.findById(id);
       if (!user) {
         return res.status(404).json({
@@ -133,7 +133,7 @@ class UserController {
         });
       }
 
-      // Prevent admin from changing their own status
+      // Ngăn admin thay đổi status của chính mình
       if (user.Id === req.user.id) {
         return res.status(400).json({
           success: false,
@@ -141,17 +141,17 @@ class UserController {
         });
       }
 
-      // Normalize userId
+      // Chuẩn hóa userId
       let userId = id;
       if (typeof userId !== "string") {
         userId = String(userId);
       }
       userId = userId.trim().toUpperCase();
 
-      // Update status
+      // Cập nhật status
       await UserModel.updateStatus(userId, status);
 
-      // Get updated user
+      // Lấy user đã được cập nhật
       const updatedUser = await UserModel.findById(userId);
 
       res.json({

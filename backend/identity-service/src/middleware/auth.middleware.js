@@ -2,7 +2,7 @@ const { verifyAccessToken } = require("../utils/jwt.utils");
 const UserModel = require("../models/user.model");
 
 /**
- * Authenticate user using JWT token
+ * Xác thực user bằng JWT token
  */
 async function authenticate(req, res, next) {
   try {
@@ -15,12 +15,12 @@ async function authenticate(req, res, next) {
       });
     }
 
-    const token = authHeader.substring(7); // Remove "Bearer " prefix
+    const token = authHeader.substring(7); // Loại bỏ prefix "Bearer "
 
-    // Verify token
+    // Xác thực token
     const decoded = verifyAccessToken(token);
 
-    // Ensure userId is properly formatted (handle Buffer or object conversion)
+    // Đảm bảo userId được format đúng (xử lý chuyển đổi Buffer hoặc object)
     let userId = decoded.userId;
     if (Buffer.isBuffer(userId)) {
       const hex = userId.toString("hex");
@@ -35,16 +35,16 @@ async function authenticate(req, res, next) {
       userId = String(userId);
     }
 
-    // Trim and ensure proper UUID format (uppercase for SQL Server)
+    // Trim và đảm bảo format UUID đúng (uppercase cho SQL Server)
     userId = userId.trim().toUpperCase();
 
-    // Debug logging (only in development)
+    // Debug logging (chỉ trong development)
     if (process.env.NODE_ENV === "development") {
       console.log("=== AUTH DEBUG ===");
       console.log("Extracted userId:", userId, "Type:", typeof userId);
     }
 
-    // Get user from database
+    // Lấy user từ database
     const user = await UserModel.findById(userId);
 
     if (!user) {
@@ -57,7 +57,7 @@ async function authenticate(req, res, next) {
       });
     }
 
-    // Check if user is active
+    // Kiểm tra user có active không
     if (user.Status !== "ACTIVE") {
       return res.status(403).json({
         success: false,
@@ -65,7 +65,7 @@ async function authenticate(req, res, next) {
       });
     }
 
-    // Attach user to request
+    // Gắn user vào request
     req.user = {
       id: user.Id,
       email: user.Email,
@@ -98,7 +98,7 @@ async function authenticate(req, res, next) {
 }
 
 /**
- * Authorize user by role(s)
+ * Phân quyền user theo role(s)
  */
 function authorize(...allowedRoles) {
   return (req, res, next) => {

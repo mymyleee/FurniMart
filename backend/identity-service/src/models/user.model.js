@@ -3,7 +3,7 @@ const { hashPassword } = require("../utils/password.utils");
 
 class UserModel {
   /**
-   * Find user by email
+   * Tìm user theo email
    */
   static async findByEmail(email) {
     const pool = await db.getPool();
@@ -56,12 +56,12 @@ class UserModel {
   }
 
   /**
-   * Find user by ID
+   * Tìm user theo ID
    */
   static async findById(userId) {
     const pool = await db.getPool();
     
-    // Ensure userId is a valid UUID string
+    // Đảm bảo userId là UUID string hợp lệ
     let userIdStr = userId;
     if (Buffer.isBuffer(userIdStr)) {
       const hex = userIdStr.toString('hex');
@@ -76,10 +76,10 @@ class UserModel {
       userIdStr = String(userIdStr);
     }
     
-    // Trim and ensure uppercase (SQL Server UniqueIdentifier is case-insensitive but better to normalize)
+    // Trim và đảm bảo uppercase (SQL Server UniqueIdentifier không phân biệt hoa thường nhưng nên chuẩn hóa)
     userIdStr = userIdStr.trim().toUpperCase();
     
-    // Use CONVERT to ensure proper UUID handling
+    // Sử dụng CONVERT để đảm bảo xử lý UUID đúng cách
     const result = await pool
       .request()
       .input("idStr", db.sql.NVarChar(36), userIdStr)
@@ -128,13 +128,13 @@ class UserModel {
   }
 
   /**
-   * Create new user
+   * Tạo user mới
    */
   static async create(userData) {
     const pool = await db.getPool();
     const passwordHash = await hashPassword(userData.password);
 
-    // Get role ID by name
+    // Lấy role ID theo tên
     const roleResult = await pool
       .request()
       .input("roleName", db.sql.NVarChar, userData.role || "CUSTOMER")
@@ -163,7 +163,7 @@ class UserModel {
 
     const user = result.recordset[0];
 
-    // Normalize user.Id to string if needed (SQL Server UniqueIdentifier may be Buffer)
+    // Chuẩn hóa user.Id thành string nếu cần (SQL Server UniqueIdentifier có thể là Buffer)
     if (user && user.Id) {
       let userId = user.Id;
       if (Buffer.isBuffer(userId)) {
@@ -183,7 +183,7 @@ class UserModel {
       user.Id = userId;
     }
 
-    // Get role name
+    // Lấy tên role
     const roleNameResult = await pool
       .request()
       .input("roleId", db.sql.Int, roleId)
@@ -196,7 +196,7 @@ class UserModel {
   }
 
   /**
-   * Update user last login
+   * Cập nhật thời gian đăng nhập cuối cùng
    */
   static async updateLastLogin(userId) {
     const pool = await db.getPool();
@@ -207,12 +207,12 @@ class UserModel {
   }
 
   /**
-   * Update user status
+   * Cập nhật trạng thái user
    */
   static async updateStatus(userId, status) {
     const pool = await db.getPool();
     
-    // Normalize userId
+    // Chuẩn hóa userId
     let userIdStr = userId;
     if (typeof userIdStr !== "string") {
       userIdStr = String(userIdStr);
@@ -231,7 +231,7 @@ class UserModel {
   }
 
   /**
-   * Update user password
+   * Cập nhật mật khẩu user
    */
   static async updatePassword(userId, newPassword) {
     const pool = await db.getPool();
@@ -244,7 +244,7 @@ class UserModel {
   }
 
   /**
-   * Check if email exists
+   * Kiểm tra email đã tồn tại chưa
    */
   static async emailExists(email) {
     const pool = await db.getPool();

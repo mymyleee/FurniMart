@@ -3,14 +3,14 @@ const bcrypt = require("bcryptjs");
 const SALT_ROUNDS = 12;
 
 /**
- * Hash password
+ * Hash mật khẩu
  */
 async function hashPassword(password) {
   return bcrypt.hash(password, SALT_ROUNDS);
 }
 
 /**
- * Compare password with hash
+ * So sánh mật khẩu với hash
  */
 async function comparePassword(password, hash) {
   return bcrypt.compare(password, hash);

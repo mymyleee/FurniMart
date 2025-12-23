@@ -69,33 +69,18 @@ npm run dev
 
 ### Tạo Tài Khoản Admin Gốc
 
-Sau khi database đã được setup, bạn có thể tạo tài khoản admin gốc:
-
-**Cách 1: Sử dụng script Node.js (Khuyến nghị)**
-
-```bash
-cd backend/identity-service
-
-# Tạo admin với thông tin mặc định
-npm run seed:admin
-
-# Hoặc tùy chỉnh thông tin
-node scripts/seed-admin.js --email admin@example.com --password YourSecurePass123 --name "Admin User"
-```
-
 **Thông tin mặc định:**
 
 - Email: `admin@furnimart.com`
 - Password: `Admin@123`
-- Name: `System Administrator`
 
 ⚠️ **Lưu ý:** Đổi mật khẩu ngay sau lần đăng nhập đầu tiên!
 
-**Cách 2: Sử dụng SQL Script**
+**Sử dụng SQL Script**
 
 ```bash
 # Chạy script SQL từ thư mục root
-docker exec -i furnimart-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "FurniMart@2024" -d identity_db -i /path/to/seed-admin.sql
+docker exec -i furnimart-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "FurniMart@2024" -C -i /docker-entrypoint-initdb.d/identity_db.sql
 ```
 
 ## ⚙️ Environment Variables

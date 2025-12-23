@@ -2,21 +2,21 @@ const db = require("../config/database");
 
 class RefreshTokenModel {
   /**
-   * Create refresh token
+   * Tạo refresh token
    */
   static async create(tokenData) {
     const pool = await db.getPool();
 
-    // Calculate expiration date
+    // Tính toán ngày hết hạn
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7 ngày
 
-    // Ensure userId is a valid UUID string
+    // Đảm bảo userId là UUID string hợp lệ
     let userId = tokenData.userId;
 
-    // Convert to string if needed
+    // Chuyển đổi sang string nếu cần
     if (Buffer.isBuffer(userId)) {
-      // Convert Buffer to UUID string format
+      // Chuyển đổi Buffer sang định dạng UUID string
       const hex = userId.toString("hex");
       userId = [
         hex.substr(0, 8),
@@ -37,17 +37,17 @@ class RefreshTokenModel {
       userId = String(userId);
     }
 
-    // Trim whitespace and ensure valid UUID format
+    // Trim khoảng trắng và đảm bảo format UUID hợp lệ
     userId = userId.trim();
 
-    // Validate UUID format
+    // Kiểm tra format UUID
     const uuidRegex =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(userId)) {
       throw new Error(`Invalid UUID format: ${userId}`);
     }
 
-    // Debug logging (only in development)
+    // Debug logging (chỉ trong development)
     if (process.env.NODE_ENV === "development") {
       console.log(
         "Creating refresh token with userId:",
@@ -57,7 +57,7 @@ class RefreshTokenModel {
       );
     }
 
-    // Use CONVERT in SQL to convert string to UniqueIdentifier (more reliable than CAST)
+    // Sử dụng CONVERT trong SQL để chuyển string sang UniqueIdentifier (đáng tin cậy hơn CAST)
     const result = await pool
       .request()
       .input("userIdStr", db.sql.NVarChar(36), userId)
@@ -73,7 +73,7 @@ class RefreshTokenModel {
   }
 
   /**
-   * Find refresh token
+   * Tìm refresh token
    */
   static async findByToken(token) {
     const pool = await db.getPool();
@@ -102,12 +102,12 @@ class RefreshTokenModel {
 
     const tokenData = result.recordset[0];
     if (tokenData) {
-      // Ensure UserId is properly set and converted to string if needed
-      // SQL Server UniqueIdentifier can be returned as Buffer or string
+      // Đảm bảo UserId được set đúng và chuyển đổi sang string nếu cần
+      // SQL Server UniqueIdentifier có thể được trả về dưới dạng Buffer hoặc string
       let userId = tokenData.UserId || tokenData.UserIdValue;
 
       if (Buffer.isBuffer(userId)) {
-        // Convert Buffer to UUID string format
+        // Chuyển đổi Buffer sang định dạng UUID string
         const hex = userId.toString("hex");
         userId = [
           hex.substr(0, 8),
@@ -122,16 +122,16 @@ class RefreshTokenModel {
         userId.constructor &&
         userId.constructor.name === "TYPES"
       ) {
-        // If it's a GUID type object from mssql, convert to string
+        // Nếu là object kiểu GUID từ mssql, chuyển đổi sang string
         userId = userId.toString();
       } else if (typeof userId !== "string") {
         userId = String(userId);
       }
 
-      // Ensure it's a valid UUID format string
+      // Đảm bảo là UUID format string hợp lệ
       userId = userId.trim();
 
-      // Validate UUID format
+      // Kiểm tra format UUID
       const uuidRegex =
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (userId && !uuidRegex.test(userId)) {
@@ -140,7 +140,7 @@ class RefreshTokenModel {
 
       tokenData.UserId = userId;
 
-      // Remove the duplicate field if exists
+      // Xóa field trùng lặp nếu có
       if (tokenData.UserIdValue) {
         delete tokenData.UserIdValue;
       }
@@ -159,7 +159,7 @@ class RefreshTokenModel {
   }
 
   /**
-   * Revoke refresh token
+   * Hủy refresh token
    */
   static async revoke(token, replacedByToken = null, revokedByIp = null) {
     const pool = await db.getPool();
@@ -177,7 +177,7 @@ class RefreshTokenModel {
   }
 
   /**
-   * Revoke all refresh tokens for user
+   * Hủy tất cả refresh tokens của user
    */
   static async revokeAllForUser(userId, revokedByIp = null) {
     const pool = await db.getPool();
@@ -193,7 +193,7 @@ class RefreshTokenModel {
   }
 
   /**
-   * Delete expired tokens (cleanup)
+   * Xóa tokens đã hết hạn (dọn dẹp)
    */
   static async deleteExpired() {
     const pool = await db.getPool();

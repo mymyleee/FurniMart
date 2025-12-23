@@ -7,11 +7,11 @@ const JWT_EXPIRATION = process.env.JWT_EXPIRATION || "1h";
 const JWT_REFRESH_EXPIRATION = process.env.JWT_REFRESH_EXPIRATION || "7d";
 
 /**
- * Generate access token
+ * Tạo access token
  */
 function generateAccessToken(user) {
-  // Ensure userId is a string
-  let userId = user.id || user.Id; // Handle both lowercase and uppercase
+  // Đảm bảo userId là string
+  let userId = user.id || user.Id; // Xử lý cả lowercase và uppercase
   if (!userId) {
     console.error(
       "ERROR: userId is missing in user object:",
@@ -42,7 +42,7 @@ function generateAccessToken(user) {
     roleName: user.roleName || user.RoleName,
   };
 
-  // Debug logging (only in development, avoid logging sensitive data in production)
+  // Debug logging (chỉ trong development, tránh log dữ liệu nhạy cảm trong production)
   if (process.env.NODE_ENV === "development") {
     console.log("Generating access token with userId:", payload.userId);
   }
@@ -55,14 +55,14 @@ function generateAccessToken(user) {
 }
 
 /**
- * Generate refresh token
+ * Tạo refresh token
  */
 function generateRefreshToken() {
   return uuidv4();
 }
 
 /**
- * Verify access token
+ * Xác thực access token
  */
 function verifyAccessToken(token) {
   try {
@@ -81,7 +81,7 @@ function verifyAccessToken(token) {
 }
 
 /**
- * Decode token without verification (for debugging)
+ * Decode token mà không xác thực (để debug)
  */
 function decodeToken(token) {
   return jwt.decode(token);

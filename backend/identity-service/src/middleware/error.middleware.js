@@ -1,10 +1,10 @@
 /**
- * Error handling middleware
+ * Middleware xử lý lỗi
  */
 function errorHandler(err, req, res, next) {
   console.error("Error:", err);
 
-  // Validation errors
+  // Lỗi validation
   if (err.name === "ValidationError") {
     return res.status(400).json({
       success: false,
@@ -13,7 +13,7 @@ function errorHandler(err, req, res, next) {
     });
   }
 
-  // Database errors
+  // Lỗi database
   if (err.name === "RequestError" || err.code === "EREQUEST") {
     return res.status(500).json({
       success: false,
@@ -22,7 +22,7 @@ function errorHandler(err, req, res, next) {
     });
   }
 
-  // Default error
+  // Lỗi mặc định
   res.status(err.status || 500).json({
     success: false,
     message: err.message || "Internal server error",

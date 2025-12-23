@@ -193,5 +193,62 @@ BEGIN
 END;
 GO
 
+-- =============================================
+-- Seed Data: Default Admin Account
+-- =============================================
+-- Tài khoản admin mặc định (đã active sẵn)
+-- Email: admin@furnimart.com
+-- Password: Admin@123
+-- Status: ACTIVE
+-- EmailVerified: 1 (true)
+-- 
+-- Tài khoản này được tạo tự động khi chạy script SQL lần đầu
+-- Cho phép đăng nhập ngay để active các tài khoản khác
+IF NOT EXISTS (SELECT * FROM [dbo].[Users] WHERE [Email] = 'admin@furnimart.com')
+BEGIN
+    DECLARE @AdminRoleId INT;
+    SELECT @AdminRoleId = [Id] FROM [dbo].[Roles] WHERE [Name] = 'ADMIN';
+    
+    IF @AdminRoleId IS NOT NULL
+    BEGIN
+        INSERT INTO [dbo].[Users] (
+            [Id],
+            [Email],
+            [PasswordHash],
+            [FullName],
+            [Phone],
+            [RoleId],
+            [Status],
+            [EmailVerified],
+            [PhoneVerified]
+        ) VALUES (
+            NEWID(),
+            'admin@furnimart.com',
+            '$2a$12$y9z6excriS6YDwUmvJYZPO6THuKIavteR3uj483cxY1oXTNmy3xaq', -- bcrypt hash của "Admin@123" (12 rounds) - đã verify
+            'System Administrator',
+            NULL,
+            @AdminRoleId,
+            'ACTIVE',
+            1, -- EmailVerified = true
+            0  -- PhoneVerified = false
+        );
+        
+        PRINT 'Default admin account created successfully!';
+        PRINT 'Email: admin@furnimart.com';
+        PRINT 'Password: Admin@123';
+        PRINT 'Status: ACTIVE (có thể đăng nhập ngay)';
+        PRINT '⚠️  Lưu ý: Đổi mật khẩu ngay sau lần đăng nhập đầu tiên!';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Warning: ADMIN role not found. Admin account not created.';
+    END
+END
+ELSE
+BEGIN
+    PRINT 'Admin account already exists. Skipping creation.';
+END
+GO
+
 PRINT 'Identity database schema created successfully!';
 GO

@@ -1,91 +1,154 @@
 # Database Initialization
 
-## Overview
-This directory contains SQL scripts to initialize all databases for FurniMart microservices.
+## Tổng quan
+
+Thư mục này chứa các script SQL để khởi tạo tất cả các database cho các microservices của FurniMart.
 
 ## Databases
-- `identity_db.sql` - Identity Service database
-- `catalog_db.sql` - Catalog Service database  
-- `inventory_db.sql` - Inventory Service database
-- `order_db.sql` - Order Service database
-- `delivery_db.sql` - Delivery Service database
-- `payment_db.sql` - Payment & After-Sale Service database
-- `reporting_db.sql` - Reporting Service database
 
-## Initialization Methods
+- `identity_db.sql` - Database cho Identity Service
+- `catalog_db.sql` - Database cho Catalog Service
+- `inventory_db.sql` - Database cho Inventory Service
+- `order_db.sql` - Database cho Order Service
+- `delivery_db.sql` - Database cho Delivery Service
+- `payment_db.sql` - Database cho Payment & After-Sale Service
+- `reporting_db.sql` - Database cho Reporting Service
 
-### Method 1: Manual Execution (Recommended for First Time)
+## 🚀 Khởi tạo Tự động (Khuyến nghị)
 
-After SQL Server container is running:
+### Cách 1: Sử dụng Docker Compose (Tự động)
 
-**Windows (PowerShell):**
-```powershell
-# From project root
-cd database/sqlserver
-.\init-databases.ps1
+Chỉ cần chạy:
+
+```bash
+docker-compose up
 ```
 
-**Linux/Mac:**
+Script `init.sh` sẽ tự động:
+
+- Chờ SQL Server sẵn sàng
+- Chạy tất cả các file SQL theo thứ tự
+- Bỏ qua các database đã tồn tại
+- Hiển thị tóm tắt kết quả
+
+**Lưu ý:** Service `db-init` sẽ tự động chạy sau khi SQL Server healthy và chỉ chạy 1 lần.
+
+### Cách 2: Chạy thủ công script init.sh
+
+Nếu muốn chạy lại script init:
+
 ```bash
-# Wait for SQL Server to be ready (about 30 seconds)
+docker-compose run --rm db-init
+```
+
+## 📝 Khởi tạo Thủ công
+
+### Windows (PowerShell)
+
+Sau khi SQL Server container đã chạy:
+
+```powershell
+# Chạy từng file SQL
+Get-Content .\database\sqlserver\identity_db.sql | docker exec -i furnimart-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "FurniMart@2024" -C
+
+Get-Content .\database\sqlserver\catalog_db.sql | docker exec -i furnimart-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "FurniMart@2024" -C
+```
+
+### Linux/Mac
+
+```bash
+# Chờ SQL Server sẵn sàng (khoảng 30 giây)
 sleep 30
 
-# Run SQL scripts manually
-docker exec -i furnimart-sqlserver /opt/mssql-tools/bin/sqlcmd \
+# Chạy các script SQL
+docker exec -i furnimart-sqlserver /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P "FurniMart@2024" \
   -i /docker-entrypoint-initdb.d/identity_db.sql
-```
 
-### Method 2: Docker Exec
-
-```bash
-# Execute all SQL files
-docker exec -i furnimart-sqlserver /opt/mssql-tools/bin/sqlcmd \
+docker exec -i furnimart-sqlserver /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P "FurniMart@2024" \
-  < database/sqlserver/identity_db.sql
-
-# Or execute them one by one
-for file in database/sqlserver/*.sql; do
-  docker exec -i furnimart-sqlserver /opt/mssql-tools/bin/sqlcmd \
-    -S localhost -U sa -P "FurniMart@2024" \
-    < "$file"
-done
+  -i /docker-entrypoint-initdb.d/catalog_db.sql
 ```
 
-### Method 3: SQL Server Management Studio (SSMS)
+### SQL Server Management Studio (SSMS)
 
-1. Connect to `localhost,1433` with:
+1. Kết nối đến `localhost,1433` với:
+
    - Username: `sa`
    - Password: `FurniMart@2024`
 
-2. Open and execute each `.sql` file in order
+2. Mở và chạy từng file `.sql` theo thứ tự
 
-## Verify Databases
+## ✅ Kiểm tra Databases
 
 ```sql
--- Check if databases exist
+-- Kiểm tra các database đã được tạo
 SELECT name FROM sys.databases WHERE name LIKE '%_db'
 
--- Check identity_db tables
+-- Kiểm tra tables trong identity_db
 USE identity_db
 SELECT name FROM sys.tables
 
--- Check roles
+-- Kiểm tra roles
 SELECT * FROM Roles
+
+-- Kiểm tra tài khoản admin
+SELECT Email, FullName, Status, EmailVerified
+FROM Users
+WHERE Email = 'admin@furnimart.com'
 ```
 
-## Troubleshooting
+## 🔧 Xử lý Sự cố
 
-### SQL Server not ready
-Wait a bit longer (SQL Server takes 20-30 seconds to start):
+### SQL Server chưa sẵn sàng
+
+Đợi thêm một chút (SQL Server cần 20-30 giây để khởi động):
+
 ```bash
 docker logs furnimart-sqlserver
 ```
 
-### Permission errors
-Ensure you're using the `sa` user with correct password.
+### Lỗi quyền truy cập
 
-### Database already exists
-Scripts use `IF NOT EXISTS` checks, so they're safe to run multiple times.
+Đảm bảo bạn đang sử dụng user `sa` với mật khẩu đúng.
 
+### Database đã tồn tại
 
+Scripts sử dụng kiểm tra `IF NOT EXISTS`, nên an toàn khi chạy nhiều lần. Script `init.sh` cũng tự động bỏ qua các database đã tồn tại.
+
+### Chạy lại script init
+
+Nếu muốn chạy lại script init (ví dụ sau khi sửa SQL):
+
+```bash
+# Xóa container init cũ (nếu có)
+docker rm furnimart-db-init 2>/dev/null || true
+
+# Chạy lại
+docker-compose run --rm db-init
+```
+
+### Xóa và tạo lại database
+
+Nếu muốn xóa và tạo lại database:
+
+```powershell
+# Xóa database
+docker exec furnimart-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U sa -P "FurniMart@2024" \
+  -Q "DROP DATABASE IF EXISTS identity_db" -C
+
+# Chạy lại script
+Get-Content .\database\sqlserver\identity_db.sql | docker exec -i furnimart-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "FurniMart@2024" -C
+```
+
+## 📋 Tài khoản Admin Mặc định
+
+Sau khi chạy `identity_db.sql`, tài khoản admin mặc định sẽ được tạo:
+
+- **Email**: `admin@furnimart.com`
+- **Password**: `Admin@123`
+- **Status**: `ACTIVE`
+- **EmailVerified**: `true`
+
+⚠️ **Lưu ý**: Đổi mật khẩu ngay sau lần đăng nhập đầu tiên!

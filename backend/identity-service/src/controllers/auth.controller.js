@@ -11,11 +11,11 @@ const {
 
 class AuthController {
   /**
-   * Register new user
+   * Đăng ký user mới
    */
   static async register(req, res, next) {
     try {
-      // Check validation errors
+      // Kiểm tra lỗi validation
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
@@ -27,7 +27,7 @@ class AuthController {
 
       const { email, password, fullName, phone, role } = req.body;
 
-      // Check if email already exists
+      // Kiểm tra email đã tồn tại chưa
       const emailExists = await UserModel.emailExists(email);
       if (emailExists) {
         return res.status(400).json({
@@ -36,13 +36,13 @@ class AuthController {
         });
       }
 
-      // Default role to CUSTOMER if not specified
+      // Mặc định role là CUSTOMER nếu không chỉ định
       const userRole = role || "CUSTOMER";
 
-      // For non-CUSTOMER roles, set status to PENDING_APPROVAL
+      // Đối với các role không phải CUSTOMER, set status là PENDING_APPROVAL
       const status = userRole === "CUSTOMER" ? "ACTIVE" : "PENDING_APPROVAL";
 
-      // Create user
+      // Tạo user
       const user = await UserModel.create({
         email,
         password,
@@ -52,7 +52,7 @@ class AuthController {
         status,
       });
 
-      // Debug: log user object (only in development)
+      // Debug: log user object (chỉ trong development)
       if (process.env.NODE_ENV === "development") {
         console.log(
           "Register - User created:",
@@ -69,7 +69,7 @@ class AuthController {
         );
       }
 
-      // Normalize user.Id to string if needed
+      // Chuẩn hóa user.Id thành string nếu cần
       let userId = user.Id;
       if (!userId) {
         throw new Error("User.Id is missing after creation");
@@ -96,7 +96,7 @@ class AuthController {
         console.log("Register - Normalized userId:", userId);
       }
 
-      // Generate tokens with normalized userId
+      // Tạo tokens với userId đã được chuẩn hóa
       const accessToken = generateAccessToken({
         id: userId,
         email: user.Email,
@@ -105,7 +105,7 @@ class AuthController {
       });
       const refreshToken = generateRefreshToken();
 
-      // Save refresh token
+      // Lưu refresh token
       await RefreshTokenModel.create({
         userId: userId,
         token: refreshToken,
@@ -139,11 +139,11 @@ class AuthController {
   }
 
   /**
-   * Login user
+   * Đăng nhập user
    */
   static async login(req, res, next) {
     try {
-      // Check validation errors
+      // Kiểm tra lỗi validation
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
@@ -155,7 +155,7 @@ class AuthController {
 
       const { email, password } = req.body;
 
-      // Find user by email
+      // Tìm user theo email
       const user = await UserModel.findByEmail(email);
       if (!user) {
         return res.status(401).json({
@@ -164,7 +164,7 @@ class AuthController {
         });
       }
 
-      // Check if user is active
+      // Kiểm tra user có active không
       if (user.Status !== "ACTIVE") {
         return res.status(403).json({
           success: false,
@@ -172,7 +172,7 @@ class AuthController {
         });
       }
 
-      // Verify password
+      // Xác thực mật khẩu
       const isPasswordValid = await comparePassword(
         password,
         user.PasswordHash
@@ -184,7 +184,7 @@ class AuthController {
         });
       }
 
-      // Normalize user.Id to string if needed
+      // Chuẩn hóa user.Id thành string nếu cần
       let userId = user.Id;
       if (Buffer.isBuffer(userId)) {
         const hex = userId.toString("hex");
@@ -203,10 +203,10 @@ class AuthController {
         userId = userId.toUpperCase();
       }
 
-      // Update last login
+      // Cập nhật last login
       await UserModel.updateLastLogin(userId);
 
-      // Generate tokens with normalized userId
+      // Tạo tokens với userId đã được chuẩn hóa
       const accessToken = generateAccessToken({
         id: userId,
         email: user.Email,
@@ -215,10 +215,10 @@ class AuthController {
       });
       const refreshToken = generateRefreshToken();
 
-      // Revoke old refresh tokens (optional - for security)
+      // Revoke old refresh tokens (tùy chọn - để bảo mật)
       // await RefreshTokenModel.revokeAllForUser(user.Id, req.ip);
 
-      // Save new refresh token
+      // Lưu refresh token mới
       await RefreshTokenModel.create({
         userId: user.Id,
         token: refreshToken,
@@ -249,7 +249,7 @@ class AuthController {
   }
 
   /**
-   * Refresh access token
+   * Làm mới access token
    */
   static async refresh(req, res, next) {
     try {
@@ -262,7 +262,7 @@ class AuthController {
         });
       }
 
-      // Find refresh token in database
+      // Tìm refresh token trong database
       const tokenData = await RefreshTokenModel.findByToken(refreshToken);
 
       if (!tokenData) {
@@ -272,8 +272,8 @@ class AuthController {
         });
       }
 
-      // Prepare user data for token generation
-      // Ensure UserId is properly formatted (it should already be converted by model)
+      // Chuẩn bị dữ liệu user để tạo token
+      // Đảm bảo UserId được format đúng (nên đã được convert bởi model)
       let userId = tokenData.UserId;
       if (Buffer.isBuffer(userId)) {
         const hex = userId.toString("hex");
@@ -295,17 +295,17 @@ class AuthController {
         roleName: tokenData.RoleName,
       };
 
-      // Generate new tokens
+      // Tạo tokens mới
       const newAccessToken = generateAccessToken(userForToken);
       const newRefreshToken = generateRefreshToken();
 
-      // Revoke old refresh token
+      // Revoke refresh token cũ
       await RefreshTokenModel.revoke(refreshToken, newRefreshToken, req.ip);
 
-      // Ensure userId is uppercase for consistency
+      // Đảm bảo userId là uppercase để nhất quán
       userId = userId.toUpperCase();
 
-      // Save new refresh token
+      // Lưu refresh token mới
       await RefreshTokenModel.create({
         userId: userId,
         token: newRefreshToken,
@@ -328,7 +328,7 @@ class AuthController {
   }
 
   /**
-   * Logout user
+   * Đăng xuất user
    */
   static async logout(req, res, next) {
     try {
@@ -349,11 +349,11 @@ class AuthController {
   }
 
   /**
-   * Get current user info
+   * Lấy thông tin user hiện tại
    */
   static async getMe(req, res, next) {
     try {
-      // Debug logging (only in development)
+      // Debug logging (chỉ trong development)
       if (process.env.NODE_ENV === "development") {
         console.log(
           "getMe - req.user.id:",

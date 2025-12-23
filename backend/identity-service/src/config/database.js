@@ -7,8 +7,8 @@ const config = {
   database: "identity_db",
   port: parseInt(process.env.SQL_SERVER_PORT || "1433"),
   options: {
-    encrypt: false, // Set to true for Azure
-    trustServerCertificate: true, // For local development
+    encrypt: false, // Đặt true cho Azure
+    trustServerCertificate: true, // Cho local development
     enableArithAbort: true,
   },
   pool: {
