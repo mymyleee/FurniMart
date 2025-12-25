@@ -28,5 +28,3 @@ GO
 
 PRINT 'Payment database initialized (placeholder)';
 GO
-
-
